@@ -17,6 +17,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "users")
+@ToString(exclude = "crewMembers") // .toString 시 순환 참조 방지
 public class User {
 
     @Id
@@ -25,11 +26,8 @@ public class User {
     private String id;
 
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<CrewMember> crewMembers = new ArrayList<>();
-
-//    // crewMember와는 다른연관관계로 유저는 여러 크루장 가능.
-    @OneToMany(mappedBy = "crewLeader",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Crew> crewLeaders;
 
     //  Spring Security의 PasswordEncoder 사용 예정.
     private String password;
@@ -38,8 +36,21 @@ public class User {
 
     private String phoneNumber;
 
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
 }

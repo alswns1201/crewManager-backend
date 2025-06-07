@@ -34,7 +34,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	//엔터디 구상시에만 임시 디비 h2 사용
-	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.h2database:h2' // <-- 이 줄을 추가하세요.
+
+
 }
 
 tasks.named('test') {

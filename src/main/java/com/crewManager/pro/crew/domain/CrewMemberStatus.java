@@ -4,6 +4,6 @@ public enum CrewMemberStatus {
 
     ACTIVE, // 기본
     STOP,   // 임시 정지
-    DELETE; // 강퇴,  탈퇴 .
+    WITHDRAWN; // 강퇴,  탈퇴 .
 
 }
