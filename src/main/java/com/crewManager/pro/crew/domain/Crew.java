@@ -2,10 +2,17 @@ package com.crewManager.pro.crew.domain;
 
 import com.crewManager.pro.user.domain.User;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "crews")
 public class Crew {

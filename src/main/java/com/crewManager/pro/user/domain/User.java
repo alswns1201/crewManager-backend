@@ -4,11 +4,17 @@ package com.crewManager.pro.user.domain;
 import com.crewManager.pro.crew.domain.Crew;
 import com.crewManager.pro.crew.domain.CrewMember;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {

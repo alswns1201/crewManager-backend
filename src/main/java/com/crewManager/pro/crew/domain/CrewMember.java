@@ -4,6 +4,8 @@ package com.crewManager.pro.crew.domain;
 import com.crewManager.pro.user.domain.User;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @IdClass(CrewMemberId.class)
 public class CrewMember {
@@ -24,6 +26,24 @@ public class CrewMember {
     private CrewMemberRole crewMemberRole;
 
     private CrewMemberStatus crewMemberStatus;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime joinedAt; // 가입 날짜 (필수)
+
+    @Column(nullable = false) // 업데이트 날짜 (필수)
+    private LocalDateTime updatedAt;
+
+    // @PrePersist 및 @PreUpdate 콜백 메서드 추가
+    @PrePersist
+    protected void onCreate() {
+        this.joinedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
 
 
