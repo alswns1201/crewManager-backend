@@ -71,7 +71,6 @@ public class UserRepositoryTest {
         assertFalse(foundUser.getCrewMembers().isEmpty(), "User 엔티티에 CrewMember 정보가 없습니다.");
         assertEquals(1, foundUser.getCrewMembers().size(), "User가 가진 멤버십 개수가 1이 아닙니다.");
 
-
     }
 
 }
