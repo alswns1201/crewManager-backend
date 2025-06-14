@@ -3,6 +3,7 @@ package com.crewManager.pro.auth.service;
 
 import com.crewManager.pro.config.security.JwtTokenProvider;
 import com.crewManager.pro.crew.domain.Crew;
+import com.crewManager.pro.crew.domain.CrewMember;
 import com.crewManager.pro.crew.domain.CrewMemberRole;
 import com.crewManager.pro.crew.repository.CrewMemberRepository;
 import com.crewManager.pro.crew.repository.CrewRepository;
@@ -65,6 +66,7 @@ public class AuthServiceTest {
         // - UserRepository가 "newuser@example.com"을 찾으면 없다고(Optional.empty()) 응답하도록 설정해서 해당 이메일 넣을수 있게 설정.
         Mockito.when(userRepository.findByEmail("newuser@example.com")).thenReturn(Optional.empty());
         // - save 메서드가 호출되면, 받은 User 객체를 그대로 반환하도록 설정
+        Mockito.when(crewRepository.findByName("만석이를 좋아하는 러너들")).thenReturn(Optional.empty());
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         Mockito.when(crewRepository.save(Mockito.any(Crew.class))).thenAnswer(invocation -> invocation.getArgument(0));
         // - JWT Provider가 "fake-jwt-token"을 반환하도록 설정
@@ -72,6 +74,10 @@ public class AuthServiceTest {
 
         //실제 when
         String resultToken = authService.login(requestDto);
+        //실제로 if 조건을 잘 타서 크루장안에 있는 findByName을 잘 타는가.
+        Mockito.verify(crewRepository, Mockito.times(1)).findByName("만석이를 좋아하는 러너들");
+        Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
+        Mockito.verify(crewRepository, Mockito.times(1)).save(Mockito.any(Crew.class));
 
         assertThat(resultToken).isEqualTo("fake-jwt-token");
 
