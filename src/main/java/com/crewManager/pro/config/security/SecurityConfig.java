@@ -2,6 +2,7 @@ package com.crewManager.pro.config.security;
 
 
 import com.crewManager.pro.config.security.JwtTokenProvider;
+import com.crewManager.pro.user.AppRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +40,7 @@ public class SecurityConfig {
                 })
                 // 토큰 인증 규칙
                 .authorizeHttpRequests(authorize-> {
+                    authorize.requestMatchers("/admin/**").hasRole(String.valueOf(AppRole.ADMIN));
                     // 로그인/회원가입은 인증 없이 허용 나머진 인증 적용.
                     authorize.requestMatchers("/login","/signup").permitAll()
                             .anyRequest().authenticated();

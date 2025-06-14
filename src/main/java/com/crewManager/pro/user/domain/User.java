@@ -1,8 +1,8 @@
 package com.crewManager.pro.user.domain;
 
 
-import com.crewManager.pro.crew.domain.Crew;
 import com.crewManager.pro.crew.domain.CrewMember;
+import com.crewManager.pro.user.AppRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = false, updatable = false, columnDefinition = "VARCHAR(36)")
     private String id;
 
+    @Column(unique = true)
+    private String email;
+
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<CrewMember> crewMembers = new ArrayList<>();
@@ -40,6 +43,8 @@ public class User {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private AppRole appRole;
 
     @PrePersist
     protected void onCreate() {

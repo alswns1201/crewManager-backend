@@ -1,7 +1,6 @@
 package com.crewManager.pro.oauth;
 
 
-import com.crewManager.pro.user.domain.SocialType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,7 +18,11 @@ public class OAuthProviderFactory {
         this.providers = providerList.stream().collect(Collectors.toUnmodifiableMap(OAuthProvider::getProviderType, Function.identity()));
     }
 
-
+    /**
+     * 생성자에서 구성된 providers에 대한 특정 key값을 return
+     * @param socialType
+     * @return
+     */
     public OAuthProvider getProvider(SocialType socialType){
         return providers.get(socialType);
     }
