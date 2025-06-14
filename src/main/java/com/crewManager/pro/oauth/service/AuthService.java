@@ -5,6 +5,7 @@ import com.crewManager.pro.config.security.JwtTokenProvider;
 import com.crewManager.pro.crew.domain.Crew;
 import com.crewManager.pro.crew.domain.CrewMember;
 import com.crewManager.pro.crew.domain.CrewMemberRole;
+import com.crewManager.pro.crew.domain.CrewMemberStatus;
 import com.crewManager.pro.crew.repository.CrewMemberRepository;
 import com.crewManager.pro.crew.repository.CrewRepository;
 import com.crewManager.pro.oauth.OAuthProvider;
@@ -70,7 +71,7 @@ public class AuthService {
         return jwtToken;
     }
 
-    private User registerOrLoginUser(OAuthUserProfile userProfile, OAuthLoginRequestDto req){
+    public User registerOrLoginUser(OAuthUserProfile userProfile, OAuthLoginRequestDto req){
         // 1단계: 유저를 찾거나 새로 만들기 (크루와는 독립적인 로직)
         Optional<User> userOptional = userRepository.findByEmail(userProfile.getEmail());
         User user = userOptional.orElseGet(() -> {
@@ -108,6 +109,7 @@ public class AuthService {
                     .user(user)
                     .crew(newCrew)
                     .role(CrewMemberRole.CREW_LEADER)
+                    .status(CrewMemberStatus.ACTIVE)
                     .build();
             crewMemberRepository.save(crewLeaderLink);
 
