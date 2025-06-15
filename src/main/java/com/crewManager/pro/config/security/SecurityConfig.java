@@ -1,7 +1,6 @@
 package com.crewManager.pro.config.security;
 
 
-import com.crewManager.pro.config.security.JwtTokenProvider;
 import com.crewManager.pro.user.AppRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +12,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -20,6 +22,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // [중요] 프론트엔드 주소를 정확히 적어줍니다.
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return  source;
+    }
 
 
     @Bean
@@ -45,6 +61,7 @@ public class SecurityConfig {
                     authorize.requestMatchers("/login","/signup").permitAll()
                             .anyRequest().authenticated();
                 })
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 프론트와 연결하기 위한 cors 정책 적용.
                 // 기본 UsernamePassword 적용 전 커스텀 filter 먼저 확인.
                 //UsernamePasswordAuthenticationFilter는 전통적인 폼 로그인(ID/PW)을 처리하는 Spring Security의 기본 필터
                 // form 로그인을 사용하지 않지만 그 filter 앞에 커스텀 filter 를 적용하겠다는 설정.
