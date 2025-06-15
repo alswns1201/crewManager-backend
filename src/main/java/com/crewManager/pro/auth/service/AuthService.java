@@ -1,4 +1,4 @@
-package com.crewManager.pro.oauth.service;
+package com.crewManager.pro.auth.service;
 
 
 import com.crewManager.pro.config.security.JwtTokenProvider;
@@ -8,10 +8,12 @@ import com.crewManager.pro.crew.domain.CrewMemberRole;
 import com.crewManager.pro.crew.domain.CrewMemberStatus;
 import com.crewManager.pro.crew.repository.CrewMemberRepository;
 import com.crewManager.pro.crew.repository.CrewRepository;
-import com.crewManager.pro.oauth.OAuthProvider;
-import com.crewManager.pro.oauth.OAuthProviderFactory;
-import com.crewManager.pro.oauth.dto.OAuthLoginRequestDto;
-import com.crewManager.pro.oauth.dto.OAuthUserProfile;
+import com.crewManager.pro.auth.OAuthProvider;
+import com.crewManager.pro.auth.OAuthProviderFactory;
+import com.crewManager.pro.auth.dto.OAuthLoginRequestDto;
+import com.crewManager.pro.auth.dto.OAuthUserProfile;
+import com.crewManager.pro.exception.BusinessException;
+import com.crewManager.pro.exception.ErrorCode;
 import com.crewManager.pro.user.domain.User;
 import com.crewManager.pro.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -95,7 +97,7 @@ public class AuthService {
 
             // 이미 같은 이름의 크루가 있는지 확인 (중복 방지)
             crewRepository.findByName(crewNameToCreate).ifPresent(c -> {
-                throw new IllegalStateException("exception : exist crewName ..");
+                throw new BusinessException(ErrorCode.CREW_NAME_DUPLICATED);
             });
 
             // 새 크루 생성
@@ -120,12 +122,12 @@ public class AuthService {
 
             // ID로 가입할 크루를 찾음. 없으면 예외 발생.
             Crew crewToJoin = crewRepository.findByName(crewNameToJoin)
-                    .orElseThrow(() -> new IllegalArgumentException("exception  : no exist crewName: " + crewNameToJoin));
+                    .orElseThrow(() -> {throw new BusinessException(ErrorCode.CREW_NOT_FOUND);});
 
             // 이미 해당 크루의 멤버인지 확인하여 중복 가입 방지
             boolean isAlreadyMember = crewMemberRepository.existsByUserAndCrew(user, crewToJoin);
             if (isAlreadyMember) {
-                log.info("{} user already exist {} crew member ", user.getEmail(), crewToJoin.getName());
+                throw new BusinessException(ErrorCode.CREW_MEMBER_DUPLICATED);
             } else {
                 // User와 기존 Crew를 연결하는 CrewMember 정보 생성 (역할: MEMBER)
                 CrewMember newMemberLink = CrewMember.builder()

@@ -1,4 +1,4 @@
-package com.crewManager.pro.oauth.dto;
+package com.crewManager.pro.auth.dto;
 
 
 import lombok.Getter;

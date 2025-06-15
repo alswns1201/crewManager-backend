@@ -1,7 +1,7 @@
-package com.crewManager.pro.oauth;
+package com.crewManager.pro.auth;
 
 
-import com.crewManager.pro.oauth.dto.OAuthUserProfile;
+import com.crewManager.pro.auth.dto.OAuthUserProfile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

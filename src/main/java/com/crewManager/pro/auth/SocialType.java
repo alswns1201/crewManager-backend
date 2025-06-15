@@ -1,4 +1,4 @@
-package com.crewManager.pro.oauth;
+package com.crewManager.pro.auth;
 
 public enum SocialType {
 

@@ -1,8 +1,8 @@
-package com.crewManager.pro.oauth.dto;
+package com.crewManager.pro.auth.dto;
 
 
 import com.crewManager.pro.crew.domain.CrewMemberRole;
-import com.crewManager.pro.oauth.SocialType;
+import com.crewManager.pro.auth.SocialType;
 import lombok.Getter;
 import lombok.Setter;
 
