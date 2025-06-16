@@ -24,13 +24,13 @@ public class KakaoProvider implements OAuthProvider {
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String KAKAO_CLIENT_ID;
 
-    @Value("{spring.security.oauth2.client.registration.kakao.redirect-url}")
+    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String KAKAO_REDIRECT_URI;
 
-    @Value("{spring.security.oauth2.client.provider.kakao.token-uri}")
+    @Value("${spring.security.oauth2.client.provider.kakao.token-uri}")
     private String KAKAO_TOKEN_URI;
 
-    @Value("spring.security.oauth2.client.provider.kakao.user-info-uri")
+    @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String KAKAO_USER_INFO_URI;
 
 
