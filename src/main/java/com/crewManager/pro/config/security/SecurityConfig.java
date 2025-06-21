@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize-> {
                     authorize.requestMatchers("/admin/**").hasRole(String.valueOf(AppRole.ADMIN));
                     // 로그인/회원가입은 인증 없이 허용 나머진 인증 적용.
-                    authorize.requestMatchers("/login","/signup").permitAll()
+                    authorize.requestMatchers("/api/auth/**").permitAll()
                             .anyRequest().authenticated();
                 })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 프론트와 연결하기 위한 cors 정책 적용.

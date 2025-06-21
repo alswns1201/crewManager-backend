@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.HashMap;
@@ -23,6 +26,9 @@ public class KakaoProvider implements OAuthProvider {
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String KAKAO_CLIENT_ID;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    private String KAKAO_CLIENT_KEY;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String KAKAO_REDIRECT_URI;
@@ -45,16 +51,19 @@ public class KakaoProvider implements OAuthProvider {
     public String getAccessToken(String authorizationCode) {
         log.info("req kakao provider getAccess code : {}",authorizationCode);
         WebClient webClient = WebClient.create();
-        HashMap<String,String> param = new HashMap<>();
-        param.put("grant_type","authorization_code");
-        param.put("client_id",KAKAO_CLIENT_ID);
-        param.put("redirect_uri",KAKAO_REDIRECT_URI);
-        param.put("code",authorizationCode);
+//        HashMap<String,String> param = new HashMap<>();
+        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
+        param.add("grant_type","authorization_code");
+        param.add("client_id",KAKAO_CLIENT_ID);
+        param.add("redirect_uri",KAKAO_REDIRECT_URI);
+        param.add("client_secret", KAKAO_CLIENT_KEY); // <<< 가장 중요한 변경점!
+        param.add("code",authorizationCode);
 
         Map<String,Object> response =  webClient.post()
                 .uri(KAKAO_TOKEN_URI)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE+";charset=utf-8")
-                .bodyValue(param)
+//                .bodyValue(param)
+                .body(BodyInserters.fromFormData(param)) // Map 대신 fromFormData 사용
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
@@ -72,7 +81,6 @@ public class KakaoProvider implements OAuthProvider {
         Map<String,Object> response = webClient.get()
                 .uri(KAKAO_USER_INFO_URI)
                 .header(HttpHeaders.AUTHORIZATION,"Bearer "+accessToken)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE+";charset=utf-8")
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
