@@ -1,5 +1,6 @@
 package com.crewManager.pro.user.service;
 
+import com.crewManager.pro.user.AppRole;
 import com.crewManager.pro.user.domain.User;
 import com.crewManager.pro.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class UserService {
                             .email(email)
                             .name(name)
                             .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                            // .appRole(UserRole.USER) // 기본 역할 설정이 필요하다면 여기에 추가
+                            .appRole(AppRole.GENERAL)
                             .build();
                     return userRepository.save(newUser);
                 });
