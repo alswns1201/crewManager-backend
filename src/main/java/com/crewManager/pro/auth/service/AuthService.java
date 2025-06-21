@@ -1,146 +1,89 @@
 package com.crewManager.pro.auth.service;
 
-
-import com.crewManager.pro.config.security.JwtTokenProvider;
-import com.crewManager.pro.crew.domain.Crew;
-import com.crewManager.pro.crew.domain.CrewMember;
-import com.crewManager.pro.crew.domain.CrewMemberRole;
-import com.crewManager.pro.crew.domain.CrewMemberStatus;
-import com.crewManager.pro.crew.repository.CrewMemberRepository;
-import com.crewManager.pro.crew.repository.CrewRepository;
 import com.crewManager.pro.auth.OAuthProvider;
 import com.crewManager.pro.auth.OAuthProviderFactory;
 import com.crewManager.pro.auth.dto.OAuthLoginRequestDto;
 import com.crewManager.pro.auth.dto.OAuthUserProfile;
-import com.crewManager.pro.exception.BusinessException;
-import com.crewManager.pro.exception.ErrorCode;
+import com.crewManager.pro.config.security.JwtTokenProvider;
+import com.crewManager.pro.crew.service.CrewService; // CrewService import
 import com.crewManager.pro.user.domain.User;
-import com.crewManager.pro.user.repository.UserRepository;
+import com.crewManager.pro.user.service.UserService; // UserService import
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AuthService {
 
-    private final UserRepository userRepository;
-
-    private final CrewRepository crewRepository;
-
-    private final CrewMemberRepository crewMemberRepository;
-
-
+    private final UserService userService; // UserService 의존성 주입
+    private final CrewService crewService; // CrewService 의존성 주입
     private final JwtTokenProvider jwtTokenProvider;
-
     private final OAuthProviderFactory providerFactory;
 
-    private final PasswordEncoder passwordEncoder;
-
-
-    @Transactional
-    public String login(OAuthLoginRequestDto req){
-
-        //유형에 맞는 구현체 적용
+    /**
+     * 소셜 로그인의 전체 흐름을 담당합니다.
+     * 트랜잭션은 실제 DB 작업이 필요한 내부 메서드에서 시작됩니다.
+     * @param req 로그인 요청 DTO
+     * @return JWT 토큰
+     */
+    public String login(OAuthLoginRequestDto req) {
+        // 1. 외부 OAuth Provider로부터 사용자 프로필 정보 가져오기 (트랜잭션 바깥)
         OAuthProvider provider = providerFactory.getProvider(req.getSocialType());
-
-        // 토큰 생성
         String accessToken = provider.getAccessToken(req.getAuthorizationCode());
         OAuthUserProfile userProfile = provider.getUserProfile(accessToken);
 
-        //서비스 비지니스 로직 적용
-        User user = registerOrLoginUser(userProfile,req);
+        // 2. 사용자 등록/로그인 및 크루 가입/생성 처리 (트랜잭션 내부)
+        User user = processUserAndCrewRegistration(userProfile, req);
 
-        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_"+user.getAppRole());
-        List<GrantedAuthority> authorities = Collections.singletonList(authority);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getId(),
-                null,
-                authorities
-        );
+        // 3. Spring Security용 Authentication 객체 생성
+        Authentication authentication = createAuthentication(user);
 
-        String jwtToken =  jwtTokenProvider.generateToken(authentication);
-        return jwtToken;
+        // 4. JWT 토큰 생성 및 반환 (트랜잭션 바깥)
+        return jwtTokenProvider.generateToken(authentication);
     }
 
-    public User registerOrLoginUser(OAuthUserProfile userProfile, OAuthLoginRequestDto req){
-        // 1단계: 유저를 찾거나 새로 만들기 (크루와는 독립적인 로직)
-        Optional<User> userOptional = userRepository.findByEmail(userProfile.getEmail());
-        User user = userOptional.orElseGet(() -> {
-            // DB에 유저가 없으면, 새로 생성합니다.
-            log.info("newUser register : {}", userProfile.getEmail());
-            User newUser = User.builder()
-                    .email(userProfile.getEmail())
-                    .name(req.getName())
-                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                    .build();
-            return userRepository.save(newUser);
-        });
+    /**
+     * 사용자 및 크루 관련 DB 작업을 하나의 트랜잭션으로 묶어 처리합니다.
+     * @param userProfile 소셜 프로필
+     * @param req 로그인 요청 DTO
+     * @return 최종적으로 등록/로그인된 User 객체
+     */
+    @Transactional
+    public User processUserAndCrewRegistration(OAuthUserProfile userProfile, OAuthLoginRequestDto req) {
+        // UserService를 통해 사용자를 찾거나 새로 생성합니다.
+        User user = userService.findOrCreateUser(userProfile.getEmail(), req.getName());
 
-        // 2단계: 크루장/ 일반회원 로직 적용
-        CrewMemberRole userRoleInCrew = req.getCrewMemberRole();
-
-        if (CrewMemberRole.CREW_LEADER == userRoleInCrew) {
-            // --- 크루장(CREW_LEADER)으로 가입하는 로직 ---
-            String crewNameToCreate = req.getCrewName();
-            log.info("CREW_LEADER create  crew : {}", crewNameToCreate);
-
-            // 이미 같은 이름의 크루가 있는지 확인 (중복 방지)
-            crewRepository.findByName(crewNameToCreate).ifPresent(c -> {
-                throw new BusinessException(ErrorCode.CREW_NAME_DUPLICATED);
-            });
-
-            // 새 크루 생성
-            Crew newCrew = Crew.builder()
-                    .name(crewNameToCreate)
-                    .build();
-            crewRepository.save(newCrew);
-
-            // User와 새 Crew를 연결하는 CrewMember 정보 생성 (역할: LEADER)
-            CrewMember crewLeaderLink = CrewMember.builder()
-                    .user(user)
-                    .crew(newCrew)
-                    .role(CrewMemberRole.CREW_LEADER)
-                    .status(CrewMemberStatus.ACTIVE)
-                    .build();
-            crewMemberRepository.save(crewLeaderLink);
-
-        } else if (CrewMemberRole.CREW_MEMBER == userRoleInCrew) {
-            // --- 일반 회원(Member)으로 가입하는 로직 ---
-            String crewNameToJoin = req.getCrewName(); // 프론트에서 선택한 크루의 ID를 받아야 함
-            log.info("CREW_MEMBER register crewName: {}", crewNameToJoin);
-
-            // ID로 가입할 크루를 찾음. 없으면 예외 발생.
-            Crew crewToJoin = crewRepository.findByName(crewNameToJoin)
-                    .orElseThrow(() -> {throw new BusinessException(ErrorCode.CREW_NOT_FOUND);});
-
-            // 이미 해당 크루의 멤버인지 확인하여 중복 가입 방지
-            boolean isAlreadyMember = crewMemberRepository.existsByUserAndCrew(user, crewToJoin);
-            if (isAlreadyMember) {
-                throw new BusinessException(ErrorCode.CREW_MEMBER_DUPLICATED);
-            } else {
-                // User와 기존 Crew를 연결하는 CrewMember 정보 생성 (역할: MEMBER)
-                CrewMember newMemberLink = CrewMember.builder()
-                        .user(user)
-                        .crew(crewToJoin)
-                        .role(CrewMemberRole.CREW_MEMBER)
-                        .build();
-                crewMemberRepository.save(newMemberLink);
-            }
-        }
+        // CrewService를 통해 크루 멤버십 관련 로직을 처리합니다.
+        crewService.registerCrewMember(user, req.getCrewName(), req.getCrewMemberRole());
 
         return user;
     }
 
+    /**
+     * 인증된 사용자에 대한 Spring Security Authentication 객체를 생성합니다.
+     * @param user 인증된 사용자
+     * @return Authentication 객체
+     */
+    private Authentication createAuthentication(User user) {
+        // 사용자 ID를 principal로 사용합니다.
+        // AppRole에 따라 권한을 부여합니다. (필요 시 수정)
+        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getAppRole());
+        List<GrantedAuthority> authorities = Collections.singletonList(authority);
 
+        return new UsernamePasswordAuthenticationToken(
+                user.getId(), // Principal: 사용자 ID
+                null,       // Credentials: 비밀번호는 사용하지 않음
+                authorities // Authorities: 권한 목록
+        );
+    }
 }
