@@ -16,12 +16,13 @@ public class OAuthLoginRequestDto {
 
     private String authorizationCode;
 
+    @JsonIgnore
     private String name;
-
+    @JsonIgnore
     private String phoneNumber;
-
+    @JsonIgnore
     private CrewMemberRole crewMemberRole;
-
+    @JsonIgnore
     private String crewName;
 
 }

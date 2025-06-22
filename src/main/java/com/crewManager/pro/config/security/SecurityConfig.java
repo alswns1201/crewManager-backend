@@ -60,6 +60,7 @@ public class SecurityConfig {
                     // 로그인/회원가입은 인증 없이 허용 나머진 인증 적용.
                     authorize.requestMatchers("/api/**").permitAll()
                             .anyRequest().authenticated();
+
                 })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 프론트와 연결하기 위한 cors 정책 적용.
                 // 기본 UsernamePassword 적용 전 커스텀 filter 먼저 확인.
