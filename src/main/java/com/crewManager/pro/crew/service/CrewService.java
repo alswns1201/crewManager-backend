@@ -36,14 +36,13 @@ public class CrewService {
     @Transactional
     public void registerCrewMember(User user, String crewName, CrewMemberRole role) {
         if (crewName == null || crewName.isBlank()) {
-            log.info("Crew registration skipped for user: {}", user.getEmail());
-            return;
+            throw new BusinessException(ErrorCode.CREW_NOT_FOUND);
         }
 
         if (role == null) {
             // 역할이 지정되지 않은 경우, 아무 작업도 하지 않고 종료
             log.info("User {} has no role specified for crew registration. Skipping.", user.getEmail());
-            return;
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         if (CrewMemberRole.CREW_LEADER == role) {

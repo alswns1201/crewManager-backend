@@ -1,5 +1,7 @@
 package com.crewManager.pro.user.service;
 
+import com.crewManager.pro.exception.BusinessException;
+import com.crewManager.pro.exception.ErrorCode;
 import com.crewManager.pro.user.AppRole;
 import com.crewManager.pro.user.domain.User;
 import com.crewManager.pro.user.repository.UserRepository;
@@ -34,6 +36,7 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     log.info("새로운 사용자 등록을 시작합니다. Email: {}", email);
+                    if(name== null){throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);}
                     User newUser = User.builder()
                             .id(UUID.randomUUID().toString()) // UUID를 직접 생성하여 설정
                             .email(email)
