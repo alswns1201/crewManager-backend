@@ -1,5 +1,6 @@
 package com.crewManager.pro.user.service;
 
+import com.crewManager.pro.auth.dto.OAuthLoginRequestDto;
 import com.crewManager.pro.exception.BusinessException;
 import com.crewManager.pro.exception.ErrorCode;
 import com.crewManager.pro.user.AppRole;
@@ -23,30 +24,32 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * 이메일을 기반으로 사용자를 찾거나, 존재하지 않으면 새로 생성하여 반환합니다.
-     * 이 메서드는 독립적인 트랜잭션 내에서 실행될 수도 있고,
-     * 다른 서비스에 의해 호출되어 기존 트랜잭션에 참여할 수도 있습니다.
-     * @param email 사용자 이메일
-     * @param name 사용자 이름 (신규 가입 시 사용)
-     * @return 찾거나 새로 생성한 User 객체
-     */
-    @Transactional // 쓰기 작업이므로 개별적으로 @Transactional 어노테이션을 붙여 readOnly=false를 적용
-    public User findOrCreateUser(String email, String name) {
+    // [신규] 사용자 '생성' 전용 메소드
+    @Transactional
+    public User createUser(String email, OAuthLoginRequestDto req) {
+        // 중복 가입 방지 체크 (중요!)
+        if (userRepository.findByEmail(email).isPresent()) {
+            // 이 경우는 비정상적인 접근일 수 있습니다.
+            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+        if(req.getName() == null || req.getName().isBlank()){
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        User newUser = User.builder()
+                .email(email)
+                .name(req.getName())
+                .phoneNumber(req.getPhoneNumber())
+//                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .appRole(AppRole.GENERAL)
+                .build();
+        return userRepository.save(newUser);
+    }
+
+    // [신규] 사용자 '조회' 전용 메소드
+    @Transactional(readOnly = true)
+    public User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    log.info("새로운 사용자 등록을 시작합니다. Email: {}", email);
-                    if(name== null){throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);}
-                    User newUser = User.builder()
-                            .id(UUID.randomUUID().toString()) // UUID를 직접 생성하여 설정
-                            .email(email)
-                            .name(name)
-                            // 소셜 로그인이므로 실제 비밀번호는 의미가 없습니다. 임의의 값으로 설정합니다.
-                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                            .appRole(AppRole.GENERAL) // 기본 역할 설정
-                            .build();
-                    return userRepository.save(newUser);
-                });
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND)); // 로그인 시도인데 회원이 없으면 에러
     }
 
     /**
