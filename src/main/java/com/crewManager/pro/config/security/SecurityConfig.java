@@ -56,10 +56,11 @@ public class SecurityConfig {
                 })
                 // 토큰 인증 규칙
                 .authorizeHttpRequests(authorize-> {
+                    authorize.requestMatchers("/api/auth/**", "/api/crew/all").permitAll(); // 로그인, 크루 목록은 허용
+                    authorize.requestMatchers("/api/users/me", "/api/crew/my/**").authenticated(); // 내 정보, 내 크루 정보 등은 인증 필요
                     authorize.requestMatchers("/admin/**").hasRole(String.valueOf(AppRole.ADMIN));
-                    // 로그인/회원가입은 인증 없이 허용 나머진 인증 적용.
-                    authorize.requestMatchers("/api/**").permitAll()
-                            .anyRequest().authenticated();
+                    authorize.anyRequest().denyAll(); // 명시되지 않은 모든 요청은 거부 (White-list 방식)
+
                 })
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 프론트와 연결하기 위한 cors 정책 적용.
                 // 기본 UsernamePassword 적용 전 커스텀 filter 먼저 확인.

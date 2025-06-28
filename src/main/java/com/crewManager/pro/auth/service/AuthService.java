@@ -60,13 +60,19 @@ public class AuthService {
      */
     @Transactional
     public User processUserAndCrewRegistration(OAuthUserProfile userProfile, OAuthLoginRequestDto req) {
-        // UserService를 통해 사용자를 찾거나 새로 생성합니다.
-        User user = userService.findOrCreateUser(userProfile.getEmail(), req.getName());
-
-        // CrewService를 통해 크루 멤버십 관련 로직을 처리합니다.
-        crewService.registerCrewMember(user, req.getCrewName(), req.getCrewMemberRole());
-
-        return user;
+        // 회원가입 플로우: 프론트에서 이름, 크루 정보 등을 넘겨준 경우
+        if (req.getName() != null && !req.getName().isBlank()) {
+            log.info("회원가입 플로우를 진행합니다. Email: {}", userProfile.getEmail());
+            User user = userService.createUser(userProfile.getEmail(), req);
+            crewService.registerCrewMember(user, req.getCrewName(), req.getCrewMemberRole());
+            return user;
+        }
+        // 로그인 플로우: 추가 정보가 없는 경우 (기존 유저)
+        else {
+            log.info("로그인 플로우를 진행합니다. Email: {}", userProfile.getEmail());
+            // 이메일로 사용자를 찾기만 하고, 없으면 예외를 발생시킵니다.
+            return userService.findUserByEmail(userProfile.getEmail());
+        }
     }
 
     /**
