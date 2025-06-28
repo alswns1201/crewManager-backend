@@ -44,7 +44,7 @@ public class AuthController {
         ResponseCookie deleteCookie = ResponseCookie.from("accessToken", "") // 쿠키 값을 비웁니다.
                 .path("/")
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)// https 에서는 true , http 에서는 false로 해야함.
                 .maxAge(0) // 만료 시간을 0으로 설정하여 즉시 삭제되도록 합니다.
                 .build();
 

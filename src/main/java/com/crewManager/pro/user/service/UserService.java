@@ -28,21 +28,21 @@ public class UserService {
     @Transactional
     public User createUser(String email, OAuthLoginRequestDto req) {
         // 중복 가입 방지 체크 (중요!)
-        if (userRepository.findByEmail(email).isPresent()) {
-            // 이 경우는 비정상적인 접근일 수 있습니다.
-            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
-        }
-        if(req.getName() == null || req.getName().isBlank()){
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-        User newUser = User.builder()
-                .email(email)
-                .name(req.getName())
-                .phoneNumber(req.getPhoneNumber())
-//                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                .appRole(AppRole.GENERAL)
-                .build();
-        return userRepository.save(newUser);
+        return userRepository.findByEmail(email)
+                .orElseGet(()->{
+                    if(req.getName() == null || req.getName().isBlank()){
+                        throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+                    }
+                    User newUser = User.builder()
+                            .email(email)
+                            .name(req.getName())
+                            .phoneNumber(req.getPhoneNumber())
+                            .appRole(AppRole.GENERAL)
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+
     }
 
     // [신규] 사용자 '조회' 전용 메소드
