@@ -86,7 +86,7 @@ public class CrewService {
 
         // 이미 해당 크루의 멤버인지 확인하여 중복 가입 방지
         if (crewMemberRepository.existsByUserAndCrew(user, crewToJoin)) {
-            throw new BusinessException(ErrorCode.CREW_MEMBER_DUPLICATED);
+            throw new BusinessException(ErrorCode.CREW_USER_DUPLICATED);
         }
 
         // User와 기존 Crew를 연결하는 CrewMember 정보 생성 (역할: MEMBER)

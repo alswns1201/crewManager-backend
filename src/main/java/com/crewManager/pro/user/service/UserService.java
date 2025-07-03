@@ -49,7 +49,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND)); // 로그인 시도인데 회원이 없으면 에러
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)); // 로그인 시도인데 회원이 없으면 에러
     }
 
     /**

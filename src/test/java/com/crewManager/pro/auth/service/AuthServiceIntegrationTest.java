@@ -54,7 +54,7 @@ public class AuthServiceIntegrationTest {
         requestDto.setSocialType(SocialType.KAKAO);
 
         //when
-        User result = authService.registerOrLoginUser(fakeProfile,requestDto);
+        User result = authService.processUserAndCrewRegistration(fakeProfile,requestDto);
 
         //then
         User foundUser =  userRepository.findById(result.getId())

@@ -1,0 +1,19 @@
+package com.crewManager.pro.event.domain;
+
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Embeddable
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+public class Location {
+
+    private String locationName;
+    private String address;
+    private Double latitude;
+    private Double longitude;
+
+}

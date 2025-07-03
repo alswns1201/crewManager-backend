@@ -30,9 +30,18 @@ public class AuthController {
         String jwtToken = authService.login(requestDto);
         log.info("socialLogin success {}",jwtToken);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization","Bearer "+jwtToken);
-        return new ResponseEntity<>(jwtToken,headers, HttpStatus.OK);
+        // ✅ JWT를 HttpOnly 쿠키로 설정
+        ResponseCookie cookie = ResponseCookie.from("accessToken", jwtToken)
+                .httpOnly(true)
+                .secure(false) // 배포시 true 이여야 https 가능
+                .path("/")
+//                .sameSite("None") // 클라이언트가 서버와 다른 도메인인 경우 https에서만 사용 가능.
+                .maxAge(60 * 60 * 24) // 1일
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("로그인 성공");
     }
 
     // [새로 추가] 로그아웃 메소드
@@ -47,8 +56,6 @@ public class AuthController {
                 .secure(false)// https 에서는 true , http 에서는 false로 해야함.
                 .maxAge(0) // 만료 시간을 0으로 설정하여 즉시 삭제되도록 합니다.
                 .build();
-
-        log.info("로그아웃 쿠키 생성 완료. 클라이언트로 전송합니다.");
 
         // Set-Cookie 헤더에 삭제할 쿠키를 담아 응답합니다.
         return ResponseEntity.ok()

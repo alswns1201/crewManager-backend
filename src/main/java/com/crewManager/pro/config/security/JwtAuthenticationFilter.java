@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
+import jakarta.servlet.http.Cookie;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -40,11 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // 요청 헤더에서 "Authorization" 필드 값을 가져와 "Bearer " 부분을 잘라내고 토큰만 반환합니다.
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        // StringUtils.hasText()는 null, 빈 문자열, 공백만 있는 문자열인지 확인
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        if(request.getCookies() == null){
+            return null;
+        }else{
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
+//        String bearerToken = request.getHeader("Authorization");
+//        // StringUtils.hasText()는 null, 빈 문자열, 공백만 있는 문자열인지 확인
+//        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+//            return bearerToken.substring(7);
+//        }
         return null;
     }
 }
